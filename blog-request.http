@@ -1,0 +1,79 @@
+### Create a new user
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+  "username": "pablodiez",
+  "name": "Pablo",
+  "password": "clave123"
+}
+
+###
+
+### Login and get JWT token
+POST http://localhost:3003/api/login
+Content-Type: application/json
+
+{
+  "username": "pablodiez",
+  "password": "clave123"
+}
+
+###
+
+### Create a new blog WITHOUT token (should fail with 401)
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "No debería crearse",
+  "author": "Anonimo",
+  "url": "http://fail.com",
+  "likes": 0
+}
+
+###
+
+### Create a new blog WITH token (replace <TOKEN> below)
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhYmxvZGlleiIsImlkIjoiNjgyZjYzYzI3Zjg1MDZiZDI4N2QzZGJlIiwiaWF0IjoxNzQ3OTM3ODYwLCJleHAiOjE3NDc5NDE0NjB9.acZxjHUiUXUdLsdZ3ER-Vrah9ryVMfBqCawszLBaPvo
+
+{
+  "title": "Blog con token",
+  "author": "Autenticado",
+  "url": "http://con-token.com",
+  "likes": 42
+}
+
+###
+
+### Get all blogs (with populated user info)
+GET http://localhost:3003/api/blogs
+
+###
+
+### Get all users
+GET http://localhost:3003/api/users
+
+###
+
+### Update likes of a blog (optional test, replace <ID>)
+PUT http://localhost:3003/api/blogs/<ID>
+Content-Type: application/json
+
+{
+  "title": "Blog con token",
+  "author": "Autenticado",
+  "url": "http://con-token.com",
+  "likes": 100
+}
+
+### Add a comment to a blog (replace <ID>)
+POST http://localhost:3003/api/blogs/682f6bdcbba4b408c812444d/comments
+Content-Type: application/json
+
+{
+  "comment": "Este blog está buenísimo 2" 
+}
+
