@@ -10,12 +10,11 @@ const User = require('../models/user')
 let token = null
 
 beforeEach(async () => {
-    await Blog.deleteMany({})
-    await User.deleteMany({})
+    await api.post('/api/testing/reset')
 
     const passwordHash = await bcrypt.hash('clave123', 10)
     const user = new User({ username: 'pablodiez', passwordHash })
-    await user.save()
+    const savedUser = await user.save()
 
     const loginResponse = await api
         .post('/api/login')
@@ -28,12 +27,14 @@ beforeEach(async () => {
         author: 'Pablo',
         url: 'http://example.com',
         likes: 7,
-        user: user._id
+        user: savedUser._id
     })
 
-    await initialBlog.save()
-    user.blogs = [initialBlog._id]
-    await user.save()
+    const savedBlog = await initialBlog.save()
+
+    const freshUser = await User.findById(savedUser._id)
+    freshUser.blogs = [savedBlog._id]
+    await freshUser.save()
 })
 
 test('blogs are returned as JSON', async () => {
@@ -147,8 +148,11 @@ test('likes of a blog can be updated', async () => {
     const blogToUpdate = blogsAtStart.body[0]
 
     const updatedData = {
-        ...blogToUpdate,
-        likes: blogToUpdate.likes + 1
+        title: blogToUpdate.title,
+        author: blogToUpdate.author,
+        url: blogToUpdate.url,
+        likes: blogToUpdate.likes + 1,
+        user: blogToUpdate.user.id || blogToUpdate.user
     }
 
     const response = await api
@@ -174,7 +178,6 @@ test('a comment can be added to a blog', async () => {
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
-
     expect(response.body.comments).toContain(newComment.comment)
 
     const blogsAtEnd = await api.get('/api/blogs')
@@ -182,7 +185,6 @@ test('a comment can be added to a blog', async () => {
 
     expect(updatedBlog.comments).toContain('¡Test Comment!')
 })
-
 
 afterAll(async () => {
     await mongoose.connection.close()
