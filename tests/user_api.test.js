@@ -7,15 +7,20 @@ const api = supertest(app)
 const User = require('../models/user')
 
 beforeEach(async () => {
-    await User.deleteMany({})
+    await api.post('/api/testing/reset')
 
-    const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
-    await user.save()
+    const newUser = {
+        username: 'root',
+        name: 'Root',
+        password: 'sekret'
+    }
+
+    await api.post('/api/users').send(newUser)
 })
 
+
 test('a valid user can be created', async () => {
-    const usersAtStart = await User.find({})
+    const usersAtStart = await api.get('/api/users')
 
     const newUser = {
         username: 'newuser',
@@ -29,12 +34,14 @@ test('a valid user can be created', async () => {
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
-    const usersAtEnd = await User.find({})
-    expect(usersAtEnd).toHaveLength(usersAtStart.length + 1)
+    const usersAtEnd = await api.get('/api/users')
+    expect(usersAtEnd.body).toHaveLength(usersAtStart.body.length + 1)
 
-    const usernames = usersAtEnd.map(u => u.username)
+    const usernames = usersAtEnd.body.map(u => u.username)
     expect(usernames).toContain(newUser.username)
 })
+
+
 
 test('creation fails with too short username', async () => {
     const newUser = {

@@ -12,9 +12,13 @@ let token = null
 beforeEach(async () => {
     await api.post('/api/testing/reset')
 
-    const passwordHash = await bcrypt.hash('clave123', 10)
-    const user = new User({ username: 'pablodiez', passwordHash })
-    const savedUser = await user.save()
+    const newUser = {
+        username: 'pablodiez',
+        name: 'Pablo',
+        password: 'clave123'
+    }
+
+    await api.post('/api/users').send(newUser)
 
     const loginResponse = await api
         .post('/api/login')
@@ -22,20 +26,19 @@ beforeEach(async () => {
 
     token = loginResponse.body.token
 
-    const initialBlog = new Blog({
+    const newBlog = {
         title: 'Initial blog',
         author: 'Pablo',
         url: 'http://example.com',
-        likes: 7,
-        user: savedUser._id
-    })
+        likes: 7
+    }
 
-    const savedBlog = await initialBlog.save()
-
-    const freshUser = await User.findById(savedUser._id)
-    freshUser.blogs = [savedBlog._id]
-    await freshUser.save()
+    await api
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
 })
+
 
 test('blogs are returned as JSON', async () => {
     await api

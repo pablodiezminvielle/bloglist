@@ -7,12 +7,18 @@ const api = supertest(app)
 const User = require('../models/user')
 
 beforeEach(async () => {
-    await User.deleteMany({})
+    await api.post('/api/testing/reset')
 
-    const passwordHash = await bcrypt.hash('clave123', 10)
-    const user = new User({ username: 'pablodiez', passwordHash })
-    await user.save()
+    const newUser = {
+        username: 'pablodiez',
+        name: 'Pablo',
+        password: 'clave123'
+    }
+
+    await api.post('/api/users').send(newUser)
 })
+
+
 
 test('login succeeds with valid credentials', async () => {
     const credentials = {
